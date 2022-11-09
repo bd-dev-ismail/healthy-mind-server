@@ -55,7 +55,10 @@ async function run(){
             const cursor = servicesCollection.find(query);
             const size = parseInt(req.query.size);
             if(size === 3){
-                const services = await cursor.limit(size).toArray();
+                const services = await await cursor
+                  .limit(size)
+                  .sort({ _id: -1 })
+                  .toArray();
                 return res.send(services);
             }
             else{
@@ -80,7 +83,7 @@ async function run(){
         app.get('/reviews',async(req, res)=>{
             const id = req.query.id;
             const query = {serviceId : id};
-            const cursor = reviewCollection.find(query).sort({ _id: 1 });
+            const cursor = reviewCollection.find(query).sort({ _id: -1 });
             const result = await cursor.toArray();
             res.send(result);
         });
@@ -99,7 +102,7 @@ async function run(){
             }
           const email = req.query.email;
           const query = { email: email };
-          const cursor = reviewCollection.find(query);
+          const cursor = reviewCollection.find(query).sort({ _id: -1 });
           const result = await cursor.toArray();
           res.send(result);
         });
