@@ -10,14 +10,14 @@ app.use(cors());
 app.use(express.json());
 
 
-
+//processing to connected Mongodb
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.nbna82s.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
-
+//global function for jwt
 function verifyJWT(req, res, next){
     const authHeader = req.headers.authorization;
     if(!authHeader){
@@ -32,7 +32,7 @@ function verifyJWT(req, res, next){
         next();
     })
 }
-
+//Main function
 async function run(){
     try{
         const servicesCollection = client.db('healthyMind').collection('services');
@@ -43,13 +43,13 @@ async function run(){
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '30d'});
             res.send({token})
         })
-        //create services
+        //create services data
         app.post('/services', verifyJWT, async(req, res)=> {
             const service = req.body;
             const result = await servicesCollection.insertOne(service);
             res.send(result);
         });
-        //get services
+        //get services data 
         app.get('/services', async(req, res)=> {
             const query = {};
             const cursor = servicesCollection.find(query);
@@ -66,14 +66,14 @@ async function run(){
                 res.send(services);
             }
         })
-        //get one data
+        //get one service data
         app.get('/services/:id', async(req, res)=> {
             const id = req.params.id;
             const query = {_id: ObjectId(id)};
             const result = await servicesCollection.findOne(query);
             res.send(result);
         });
-        //create review
+        //create user review 
         app.post('/reviews', verifyJWT, async(req, res)=>{
             const review = req.body;
             const result = await reviewCollection.insertOne(review);
@@ -87,14 +87,14 @@ async function run(){
             const result = await cursor.toArray();
             res.send(result);
         });
-        //get review by id
+        //get review by params id
         app.get('/review/:id', async(req, res)=>{
             const id = req.params.id;
             const query = {_id : ObjectId(id)};
             const result = await reviewCollection.findOne(query);
             res.send(result)
         })
-        //get review by email
+        //get review by query email
         app.get("/myreview",verifyJWT, async (req, res) => {
             const decoded = req.decoded;
             if(decoded.email !== req.query.email){
@@ -106,7 +106,7 @@ async function run(){
           const result = await cursor.toArray();
           res.send(result);
         });
-        //review delte by id
+        //review delte by params id
         app.delete('/myreview/:id', verifyJWT, async(req, res)=>{
             
             const id = req.params.id;
@@ -114,7 +114,7 @@ async function run(){
             const result = await reviewCollection.deleteOne(query);
             res.send(result);
         });
-        //update review by put
+        //update user review by put
         app.put("/myreviewupdate/:id", verifyJWT, async (req, res) => {
           const id = req.params.id;
           const filter = { _id: ObjectId(id) };
@@ -138,12 +138,14 @@ async function run(){
 
     }
 }
+//call main funciton & if catch error!
 run().catch(err=> console.log(err.message))
 
-
+//root 
 app.get('/', (req, res)=>{
     res.send('Healthy Mind Server is running');
 });
+//server running on port
 app.listen(port, ()=> {
     console.log(`Healthy Min server is running on port ${port}`);
 })
